@@ -51,6 +51,7 @@ extern char ntptod[MAX_CFGSTR_LENGTH];
 void readBoilerTemprature();
 void checkValveStatus();
 void setBoilerDemand();
+void setHeating(void *, int, String, int, int, int );
 
 //*************************************
 // defined in cntrl.cpp
@@ -297,12 +298,6 @@ void readBoilerTemprature()
 		oldTemprature = newTemprature;
 		dtostrf(newTemprature, 3, 0, buff); // 3 is minimum width, 1 is precision - not sure about rounding !!
 		mqttClient.publish(StateBoilerTemprature, 0, true, buff);
-
-		/* Serial.print(reading);
-		Serial.print(" Temperature: ");
-		Serial.print(buff);
-		Serial.println(" degrees centigrade");
-		 */
 	}
 }
 
@@ -331,14 +326,15 @@ void appMQTTTopicSubscribe()
 	HWCntrlState.setWECntrlTimesTopic(CommandHotwaterWETimes);
 	HWCntrlState.setWEUIcommandStateTopic(CmdStateHotwaterWE);
 }
-//
+
+
+//###############################################
 // status: 0=closed, 1=open
 // demand: 0=no demand, 1=demand
 //
 // if different then waiting
 // if the same then Heat or no Heat
-//
-
+//###############################################
 void checkValveStatus()
 {
      setBoilerDemand();
@@ -348,70 +344,72 @@ void checkValveStatus()
 	//########################################
 	if (digitalRead(HTG_UPSTAIRS_STATUS) == 0 && upHeatDemand == 0)
 	{
-		printTelnet("Upstairs: Status : OFF , DEMAND : OFF");
-		mqttClient.publish(StateUpstairsRuntime, 0, true, "OFF");
+		mqttLog("Uptairs: Status : OFF , DEMAND : OFF",true,true);
+		mqttClient.publish(StateUpstairsRuntime, 1, true, "OFF");
 	}
 	else if (digitalRead(HTG_UPSTAIRS_STATUS) == 1 && upHeatDemand == 1)
 	{
-		printTelnet("Upstairs: Status : ON , DEMAND : ON");
-		mqttClient.publish(StateUpstairsRuntime, 0, true, "ON");
+		mqttLog("Upstairs: Status : ON , DEMAND : ON",true,true);
+		mqttClient.publish(StateUpstairsRuntime, 1, true, "ON");
 		demand = 1;
 	}
 	else
 	{
-		printTelnet("upstairs: Status : Valve opening or closing");
-		mqttClient.publish(StateUpstairsRuntime, 0, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
+		mqttLog("Upstairs: Status : Valve opening or closing",true,true);
+		mqttClient.publish(StateUpstairsRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
 	}
 	//#########################################
 	// test DOWNSTAIRS  Demand and Supply
 	//#########################################
 	if (digitalRead(HTG_DOWNSTAIRS_STATUS) == 0 && downHeatDemand == 0)
 	{
-			printTelnet("Downstairs: Status : OFF , DEMAND : OFF");
-			mqttClient.publish(StateDownstairsRuntime, 0, true, "OFF");
+			mqttLog("Downstairs: Status : OFF , DEMAND : OFF",true,true);
+			mqttClient.publish(StateDownstairsRuntime, 1, true, "OFF");
 	}
 	else if (digitalRead(HTG_DOWNSTAIRS_STATUS) == 1 && downHeatDemand == 1)
 	{
-			printTelnet("Downstairs: Status : ON , DEMAND : ON");
-			mqttClient.publish(StateDownstairsRuntime, 0, true, "ON");
+			mqttLog("Downstairs: Status : ON , DEMAND : ON",true,true);
+			mqttClient.publish(StateDownstairsRuntime, 1, true, "ON");
 			demand = 1;
 	}
 	else
 	{
-		printTelnet("Downstairs: Status : Valve opening or closing");
-		mqttClient.publish(StateDownstairsRuntime, 0, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
+		mqttLog("Downstairs: Status : Valve opening or closing",true,true);
+		mqttClient.publish(StateDownstairsRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
 	}
 	//####################################
 	// test HOTWATER  Demand and Supply
 	//###################################
 	if (digitalRead(HW_STATUS) == 0 && waterHeatDemand == 0)
 	{
-		printTelnet("Hotwater: Status : OFF , DEMAND : OFF");
-		mqttClient.publish(StateHotwaterRuntime, 0, true, "OFF");
+		mqttLog("Hotwater: Status : OFF , DEMAND : OFF",true,true);
+		mqttClient.publish(StateHotwaterRuntime, 1, true, "OFF");
 	}
 	else if (digitalRead(HW_STATUS) == 1 && waterHeatDemand == 1)
 	{
-		printTelnet("Hotwater: Status : ON , DEMAND : ON");
-		mqttClient.publish(StateHotwaterRuntime, 0, true, "ON");
+		mqttLog("Hotwater: Status : ON , DEMAND : ON",true,true);
+		mqttClient.publish(StateHotwaterRuntime, 1, true, "ON");
 		demand = 1;
 	}
 	else
 	{
-		printTelnet("Hotwater: Status : Valve opening or closing");
-		mqttClient.publish(StateHotwaterRuntime, 0, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
+		mqttLog("Hotwater: Status : Valve opening or closing",true,true);
+		mqttClient.publish(StateHotwaterRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
 	}
+
+	setBoilerDemand();
 }
 
 void setBoilerDemand()
 {
 	if ( waterHeatDemand == 0 && downHeatDemand == 0 && upHeatDemand == 0)
 	{
-		printTelnet("Switch boiler off");
+		mqttLog("Switch boiler OFF",true,true);
 		demand = 0;
 	}
 	if (demand == 1)
 	{
-		printTelnet("Switch boiler on");
+		mqttLog("Switch boiler ON",true,true);
 	}
 }
 
@@ -420,76 +418,28 @@ void setBoilerDemand()
 
 void app_WD_on(void *cid)
 {
-	cntrlState *obj = (cntrlState *)cid;
-	String msg = obj->getCntrlName() + " WD ON";
-	mqttLog(msg.c_str(), true, true);
-
-	// FIXTHIS : Remove hard codeing of controller name
-
-	if (obj->getCntrlName() == "HTGUS")
-	{
-			printTelnet("Upstairs switching on.");
-			digitalWrite(HTG_UPSTAIRS_DEMAND, ON); 					    // Open valve
-			upHeatDemand = 1;											// Record value as digitalRead of OUT pin is not working (FIXTHIS)	
-	}
-	if (obj->getCntrlName() == "HTGDS")
-	{
-			printTelnet("Downstairs switching on.");
-			digitalWrite(HTG_DOWNSTAIRS_DEMAND, ON);					// open valve
-			downHeatDemand = 1;											// Record value as digitalRead of OUT pin is not working (FIXTHIS)
-	}
-	if (obj->getCntrlName() == "HTGHW")
-	{
-			printTelnet("Hotwater switching on.");
-			digitalWrite(HW_DEMAND, ON); 								// open valve
-			waterHeatDemand = 1;										// Record value as digitalRead of OUT pin is not working (FIXTHIS)
-	}
+	setHeating(cid, ON, "WD ON", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
 }
-
 void app_WD_off(void *cid)
 {
-	cntrlState *obj = (cntrlState *)cid;
-	String msg = obj->getCntrlName() + " WD OFF";
-	mqttLog(msg.c_str(), true, true);
-
-	if (obj->getCntrlName() == "HTGUS")
-	{
-		upHeatDemand = 0;
-		printTelnet("Upstairs switching off.");
-		digitalWrite(HTG_UPSTAIRS_DEMAND,OFF); // Valve is open so close valve
-	}
-	if (obj->getCntrlName() == "HTGDS")
-	{
-		downHeatDemand = 0;
-		printTelnet("Downstairs switching off.");
-		digitalWrite(HTG_DOWNSTAIRS_DEMAND, OFF); // Valve is open so close valve
-	}
-	if (obj->getCntrlName() == "HTGHW")
-	{
-		waterHeatDemand = 0;
-		printTelnet("Hotwater switching off.");
-		digitalWrite(HW_DEMAND, OFF); // Valve is open so close valve
-	}
+	setHeating(cid, OFF, "WD OFF", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
 }
-
 void app_WE_on(void *cid)
 {
-	cntrlState *obj = (cntrlState *)cid;
-	String msg = obj->getCntrlName() + " WE ON";
-	mqttLog(msg.c_str(), true, true);
+	setHeating(cid, ON, "WE ON", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
 }
-
 void app_WE_off(void *cid)
 {
-	cntrlState *obj = (cntrlState *)cid;
-	String msg = obj->getCntrlName() + " WE OFF";
-	mqttLog(msg.c_str(), true, true);
+	setHeating(cid, OFF, "WE OFF", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
 }
 void app_WD_auto(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + " WD AUTO";
 	mqttLog(msg.c_str(), true, true);
+							
+	//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+	mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
 }
 
 void app_WE_auto(void *cid)
@@ -497,6 +447,8 @@ void app_WE_auto(void *cid)
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + " WE AUTO";
 	mqttLog(msg.c_str(), true, true);
+	//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+	mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
 }
 
 void startTimesReceivedChecker()
@@ -519,6 +471,47 @@ void telnet_extension_1(char c)
 	DSCntrlState.telnet_extension_1(c);
 	HWCntrlState.telnet_extension_1(c);
 }
+
+
+void setHeating(void *cid, int state, String stateMsg, int usDemand, int dsDemand, int hwDemand )
+{
+	cntrlState *obj = (cntrlState *)cid;
+	String msg = obj->getCntrlName() + + " " +  stateMsg;
+	mqttLog(msg.c_str(), true, true);
+
+	// FIXTHIS : Remove hard codeing of controller name
+
+	if (obj->getCntrlName() == "HTGUS")
+	{
+		digitalWrite(usDemand, state); 					// Open valve
+		if (state == ON)
+			upHeatDemand = 1;							// Record value as digitalRead of OUT pin is not working (FIXTHIS)
+		else
+			upHeatDemand = 0;									
+	}
+	if (obj->getCntrlName() == "HTGDS")
+	{
+		digitalWrite(dsDemand, state);					// open valve
+		if (state == ON)
+			downHeatDemand = 1;							// Record value as digitalRead of OUT pin is not working (FIXTHIS)
+		else
+			downHeatDemand = 0;	
+	}
+	if (obj->getCntrlName() == "HTGHW")
+	{
+		digitalWrite(hwDemand, state); 					// open valve
+		if (state == ON)
+			waterHeatDemand = 1;						// Record value as digitalRead of OUT pin is not working (FIXTHIS)
+		else
+			waterHeatDemand = 0;	
+	}
+}
+
+
+
+
+
+
 // Process any application specific telnet commannds
 void telnet_extension_2(char c)
 {

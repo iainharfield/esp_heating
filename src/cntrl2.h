@@ -462,13 +462,13 @@ public:
 			//*rm = OFFMODE;
 			if (coreServices.getWeekDayState() == true)
 			{
-				setWDRunMode(ONMODE);
+				setWDRunMode(OFFMODE);
 				//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "OFF"); // FIXTHIS WD or WE
 				app_WD_off(cntrlObjRef);
 			}
 			else
 			{
-				setWERunMode(ONMODE);
+				setWERunMode(OFFMODE);
 				//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "OFF"); // FIXTHIS WD or WE
 				app_WE_off(cntrlObjRef);
 			}
@@ -488,16 +488,22 @@ public:
 			if (coreServices.getWeekDayState() == true)
 			{
 				setWDRunMode(NEXTMODE);
-				setWDSwitchBack(SBOFF);													   // Switch back to AUTOMODE when Time of Day is next OFF (don't switch back when this zone ends)
-				//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "ON"); // FIXTHIS WD or WE
-				app_WD_on(cntrlObjRef);													   // Set on because we want ON until the end of the next OFF
+				setWDSwitchBack(SBOFF);													   		// Switch back to AUTOMODE when Time of Day is next OFF (don't switch back when this zone ends)
+				//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "ON"); 	// FIXTHIS WD or WE
+				if (onORoff() == false)
+					app_WD_on(cntrlObjRef);													  	// Set on because we want ON until the end of the next OFF
+				else
+					app_WD_off(cntrlObjRef);													// Set off because we want ON until the end of the next OFF
 			}
 			else
 			{
 				setWERunMode(NEXTMODE);
-				setWESwitchBack(SBOFF);													   // Switch back to AUTOMODE when Time of Day is next OFF (don't switch back when this zone ends)
+				setWESwitchBack(SBOFF);													   		// Switch back to AUTOMODE when Time of Day is next ON (don't switch back when this zone ends)
 				//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "ON"); // FIXTHIS WD or WE
-				app_WE_on(cntrlObjRef);													   // Set on because we want ON until the end of the next OFF
+				if (onORoff() == false)
+					app_WE_on(cntrlObjRef);													  	// Set off because we want OFF until the end of the next OFF
+				else
+					app_WE_off(cntrlObjRef);
 			}
 		}
 		else if (strcmp(mqttMessage, "SET") == 0)
@@ -611,21 +617,6 @@ public:
 				}
 				i++;
 			}
-
-			if (state == true)
-			{
-				// FIXTHIS
-				// mqttLog("onORoff returns  - ON", true, true);
-				// Serial.println(" and set to ON");
-			}
-			else
-			{
-				// FIXTHIS
-
-				// mqttLog("onORoff returns  - OFF", true, true);
-				// Serial.println(" In between zones so set to OFF unless NEXT override");
-				//  mqttLog("In between zones so set to OFF unless NEXT. If in NEXT then don't switch OFF - wait for next zone to switch OFF", true);
-			}
 		}
 		return state;
 	}
@@ -673,41 +664,43 @@ public:
 			}
 			else if (getWDRunMode() == NEXTMODE && coreServices.getWeekDayState() == true)
 			{
+				onORoff();
 				// onORoff updates zone to the zone currently in
+				// SBOFF means 
 				if (getWDSwitchBack() == SBOFF && getWDZone() == ZONEGAP)
 				{
-					if (onORoff() == true)	   // moved into an on zone
+					
+					//if (onORoff() == true)	   // moved into an on zone
 						setWDSwitchBack(SBON); // allow switch back to occur at end of zone period
 				}
 				else if (getWDSwitchBack() == SBON)
 				{
-					if (onORoff() == false) // moved into a zone gap
-					{
+					//xxif (onORoff() == false) // moved into a zone gap
+					//xx{
 						setWDRunMode(AUTOMODE);
-						mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-						mqttClient.publish(getWDUIcommandStateTopic().c_str(), 0, true, "SET"); //
+
 						app_WD_auto(cntrlObjRef);
-					}
+					//xx}
 				}
 			}
 
 			else if (getWERunMode() == NEXTMODE && coreServices.getWeekDayState() == false)
 			{
+				onORoff();
 				// onORoff updates zone to the zone currently in
 				if (getWESwitchBack() == SBOFF && getWEZone() == ZONEGAP)
 				{
-					if (onORoff() == true)	   // moved into an on zone
+					//if (onORoff() == true)	   // moved into an on zone
 						setWESwitchBack(SBON); // allow switch back to occur
 				}
 				else if (getWESwitchBack() == SBON)
 				{
-					if (onORoff() == false) // moved into a zone gap
-					{
+					//xxif (onORoff() == false) // moved into a zone gap
+					//xx{
 						setWERunMode(AUTOMODE);
-						mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-						mqttClient.publish(getWEUIcommandStateTopic().c_str(), 0, true, "SET");
+
 						app_WE_auto(cntrlObjRef);
-					}
+					//xx}
 				}
 			}
 			else if (getWDRunMode() == ONMODE || getWDRunMode() == ONMODE)
@@ -839,7 +832,7 @@ public:
 		else if (getWERunMode() == ONMODE)
 			rmWE = "ONMODE";
 		else if (getWERunMode() == OFFMODE)
-			rmWE = "ONMODE";
+			rmWE = "OFFMODE";
 		else
 			rmWE = "UNKNOWN";
 
@@ -870,6 +863,7 @@ public:
 		printTelnet((String)logString);
 		sprintf(logString, "%s%s\r", "WE Cmd Topic:\t", getWEUIcommandStateTopic().c_str());
 		printTelnet((String)logString);
+		printTelnet((String)" ");
 	}
 };
 
