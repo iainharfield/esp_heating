@@ -51,6 +51,7 @@ extern char ntptod[MAX_CFGSTR_LENGTH];
 void readBoilerTemprature();
 void checkValveStatus();
 void setBoilerDemand();
+void DSvalveFault();
 void setHeating(void *, int, String, int, int, int );
 
 //*************************************
@@ -129,7 +130,14 @@ bool bCheckHW = true;
 	int upHeatDemand = 0;
 	int downHeatDemand = 0;
 	int waterHeatDemand = 0;
-	int demand = 0;
+
+	int usDemand = 0;
+	int dsDemand = 0;
+	int hwDemand = 0;
+
+    int usValveRetry = 0;
+    int dsValveRetry = 0;
+	int hwValveRetry = 0;
 
 /************************************
  * Define relay states to demand heat
@@ -148,6 +156,7 @@ devConfig espDevice;
 Ticker checkValveAndDemandStatus;
 Ticker configurationTimesReceived;
 Ticker checkBoileroutputTimer;
+
 
 bool timesReceived;
 
@@ -208,10 +217,10 @@ void setup()
 	pinMode(A0, INPUT);
 	// Intialise start up status
 	// HIGH == Demand OFF
-	digitalWrite(HTG_UPSTAIRS_DEMAND, HIGH);
-	digitalWrite(HTG_DOWNSTAIRS_DEMAND, HIGH);
-	digitalWrite(HW_DEMAND, HIGH);
-	digitalWrite(MAX_TEMP, HIGH);
+	digitalWrite(HTG_UPSTAIRS_DEMAND, HIGH);			// OFF
+	digitalWrite(HTG_DOWNSTAIRS_DEMAND, HIGH);			// OFF
+	digitalWrite(HW_DEMAND, HIGH);						// OFF
+	digitalWrite(MAX_TEMP, HIGH);						// NO Demand
 
 	upHeatDemand = 0;
 	downHeatDemand = 0;
@@ -344,17 +353,22 @@ void checkValveStatus()
 	//########################################
 	if (digitalRead(HTG_UPSTAIRS_STATUS) == 0 && upHeatDemand == 0)
 	{
+		usValveRetry = 0;
 		mqttLog("Uptairs: Status : OFF , DEMAND : OFF",true,true);
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "OFF");
+		mqttClient.publish(StateUpstairsValveState,  1, true, "OK");				// Updates UI
 	}
 	else if (digitalRead(HTG_UPSTAIRS_STATUS) == 1 && upHeatDemand == 1)
 	{
+		usValveRetry = 0;
+		usDemand = 1;
 		mqttLog("Upstairs: Status : ON , DEMAND : ON",true,true);
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "ON");
-		demand = 1;
+		mqttClient.publish(StateUpstairsValveState,  0, true, "OK");
 	}
 	else
 	{
+		usValveRetry++;
 		mqttLog("Upstairs: Status : Valve opening or closing",true,true);
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
 	}
@@ -363,39 +377,60 @@ void checkValveStatus()
 	//#########################################
 	if (digitalRead(HTG_DOWNSTAIRS_STATUS) == 0 && downHeatDemand == 0)
 	{
-			mqttLog("Downstairs: Status : OFF , DEMAND : OFF",true,true);
-			mqttClient.publish(StateDownstairsRuntime, 1, true, "OFF");
+		dsValveRetry = 0;
+		mqttLog("Downstairs: Status : OFF , DEMAND : OFF",true,true);
+		mqttClient.publish(StateDownstairsRuntime, 1, true, "OFF");					// Updates UI
+		mqttClient.publish(StateDownstairsValveState,  1, true, "OK");				// Updates UI
 	}
 	else if (digitalRead(HTG_DOWNSTAIRS_STATUS) == 1 && downHeatDemand == 1)
 	{
-			mqttLog("Downstairs: Status : ON , DEMAND : ON",true,true);
-			mqttClient.publish(StateDownstairsRuntime, 1, true, "ON");
-			demand = 1;
+		dsValveRetry = 0;
+		dsDemand = 1;
+		mqttLog("Downstairs: Status : ON , DEMAND : ON",true,true);
+		mqttClient.publish(StateDownstairsRuntime, 1, true, "ON");
+		mqttClient.publish(StateDownstairsValveState,  0, true, "OK");
 	}
 	else
 	{
+		dsValveRetry++;
 		mqttLog("Downstairs: Status : Valve opening or closing",true,true);
 		mqttClient.publish(StateDownstairsRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
 	}
-	//####################################
+
+	//#########################################
 	// test HOTWATER  Demand and Supply
-	//###################################
+	//#########################################
 	if (digitalRead(HW_STATUS) == 0 && waterHeatDemand == 0)
 	{
+		hwValveRetry = 0;
 		mqttLog("Hotwater: Status : OFF , DEMAND : OFF",true,true);
-		mqttClient.publish(StateHotwaterRuntime, 1, true, "OFF");
+		mqttClient.publish(StateHotwaterRuntime, 1, true, "OFF");					// Updates UI
+		mqttClient.publish(StateHotwaterValveState,  1, true, "OK");				// Updates UI		
 	}
 	else if (digitalRead(HW_STATUS) == 1 && waterHeatDemand == 1)
 	{
+		hwValveRetry = 0;
+		hwDemand = 1;
 		mqttLog("Hotwater: Status : ON , DEMAND : ON",true,true);
-		mqttClient.publish(StateHotwaterRuntime, 1, true, "ON");
-		demand = 1;
+		mqttClient.publish(StateHotwaterRuntime, 1, true, "ON");					// Updates UI
+		mqttClient.publish(StateHotwaterValveState,  0, true, "OK");				// Updates UI
 	}
 	else
 	{
+		hwValveRetry++;
 		mqttLog("Hotwater: Status : Valve opening or closing",true,true);
-		mqttClient.publish(StateHotwaterRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
+		mqttClient.publish(StateHotwaterRuntime, 1, true, "WAIT"); 					// send WAIT if changing valve state. i.e. wait for motorised valve to open or close	
 	}
+	
+
+	// Update UI on valve state
+	if (usValveRetry >2) 
+		mqttClient.publish(StateUpstairsValveState,  0, true, "FAULT");			// Updates UI
+	if (dsValveRetry >2)
+		mqttClient.publish(StateDownstairsValveState,  0, true, "FAULT");				// Updates U
+	if (hwValveRetry >2)
+		mqttClient.publish(StateHotwaterValveState,  0, true, "FAULT");				// Updates U
+
 
 	setBoilerDemand();
 }
@@ -405,14 +440,17 @@ void setBoilerDemand()
 	if ( waterHeatDemand == 0 && downHeatDemand == 0 && upHeatDemand == 0)
 	{
 		mqttLog("Switch boiler OFF",true,true);
-		demand = 0;
+		usDemand = 0;
+		dsDemand = 0;
+		hwDemand = 0;
+		digitalWrite(MAX_TEMP, OFF);					// Swich boiler OFF
 	}
-	if (demand == 1)
+	if (usDemand == 1 || dsDemand == 1 || hwDemand == 1)
 	{
 		mqttLog("Switch boiler ON",true,true);
+		digitalWrite(MAX_TEMP, ON);						// Swich boiler ON
 	}
 }
-
 
 
 
@@ -441,7 +479,6 @@ void app_WD_auto(void *cid)
 	//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
 	mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
 }
-
 void app_WE_auto(void *cid)
 {
 	cntrlState *obj = (cntrlState *)cid;
@@ -450,14 +487,12 @@ void app_WE_auto(void *cid)
 	//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
 	mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
 }
-
 void startTimesReceivedChecker()
 {
 	USCntrlState.runTimeReceivedCheck();
 	DSCntrlState.runTimeReceivedCheck();
 	HWCntrlState.runTimeReceivedCheck();
 }
-
 void processCntrlTOD_Ext()
 {
 	USCntrlState.processCntrlTOD_Ext();
