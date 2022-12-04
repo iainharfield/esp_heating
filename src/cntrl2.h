@@ -509,6 +509,7 @@ public:
 		else if (strcmp(mqttMessage, "SET") == 0)
 		{
 
+
 			mqttLog("processCntrlMessage: SET received.", true, true);
 
 			// IF pressed SET then check the ON Close time and sent the appropriate message
@@ -662,47 +663,51 @@ public:
 					app_WE_off(cntrlObjRef);
 				}
 			}
+
 			else if (getWDRunMode() == NEXTMODE && coreServices.getWeekDayState() == true)
 			{
-				onORoff();
-				// onORoff updates zone to the zone currently in
-				// SBOFF means 
-				if (getWDSwitchBack() == SBOFF && getWDZone() == ZONEGAP)
+				if ( onORoff() == true)  // Heating ON based on schedule - not actual
 				{
-					
-					//if (onORoff() == true)	   // moved into an on zone
-						setWDSwitchBack(SBON); // allow switch back to occur at end of zone period
-				}
-				else if (getWDSwitchBack() == SBON)
-				{
-					//xxif (onORoff() == false) // moved into a zone gap
-					//xx{
+					if (getWDSwitchBack() == SBOFF && getWDZone() == ZONEGAP) // Heating was off and next switches on
+					{
+						setWDSwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
 						setWDRunMode(AUTOMODE);
-
 						app_WD_auto(cntrlObjRef);
-					//xx}
+				    }
+				}
+				else 						// Heating OFF based on schedule - not actual
+				{
+					if (getWDSwitchBack() == SBOFF && getWDZone() != ZONEGAP) // Heating was off and next switches on
+					{
+						setWDSwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
+						setWDRunMode(AUTOMODE);
+						app_WD_auto(cntrlObjRef);
+					}
 				}
 			}
 
 			else if (getWERunMode() == NEXTMODE && coreServices.getWeekDayState() == false)
 			{
-				onORoff();
-				// onORoff updates zone to the zone currently in
-				if (getWESwitchBack() == SBOFF && getWEZone() == ZONEGAP)
+				if ( onORoff() == true)  // Heating ON based on schedule - not actual
 				{
-					//if (onORoff() == true)	   // moved into an on zone
-						setWESwitchBack(SBON); // allow switch back to occur
-				}
-				else if (getWESwitchBack() == SBON)
-				{
-					//xxif (onORoff() == false) // moved into a zone gap
-					//xx{
+					if (getWESwitchBack() == SBOFF && getWEZone() == ZONEGAP) // Heating was off and next switches on
+					{
+						setWESwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
 						setWERunMode(AUTOMODE);
-
 						app_WE_auto(cntrlObjRef);
-					//xx}
+				    }
+				}
+				else 						// Heating OFF based on schedule - not actual
+				{
+					if (getWESwitchBack() == SBOFF && getWEZone() != ZONEGAP) // Heating was off and next switches on
+					{
+						setWESwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
+						setWERunMode(AUTOMODE);
+						app_WE_auto(cntrlObjRef);
+					}
 				}
 			}
+			// FIXTHIS  logic not sound - I think do each individually
 			else if (getWDRunMode() == ONMODE || getWDRunMode() == ONMODE)
 			{
 				memset(logString, 0, sizeof logString);
