@@ -857,7 +857,7 @@ public:
 		if (getWERunMode() == AUTOMODE)
 			rmWE = "AUTOMODE";
 		else if (getWERunMode() == NEXTMODE)
-			rmWE = "NEXTMODDE";
+			rmWE = "NEXTMODE";
 		else if (getWERunMode() == ONMODE)
 			rmWE = "ONMODE";
 		else if (getWERunMode() == OFFMODE)
