@@ -50,14 +50,12 @@ class cntrlState
 	int WDrunMode;
 	int WDswitchBack;
 	int WDzone;
-	int WDHoldState;
 	bool WDcntrlTimesReceived = false;
 	bool WDcommandReceived = false;
 
 	int WErunMode;
 	int WEswitchBack;
 	int WEzone;
-	int WEHoldState;
 	bool WEcntrlTimesReceived = false;
 	bool WEcommandReceived = false;
 
@@ -88,14 +86,12 @@ public:
 		WDrunMode = AUTOMODE;
 		WDswitchBack = SBUNKOWN;
 		WDzone = ZONEGAP;
-		WDHoldState = 9;
 		WDcntrlTimesReceived = false;
 		WDcommandReceived = false;
 
 		WErunMode = AUTOMODE;
 		WEswitchBack = SBUNKOWN;
 		WEzone = ZONEGAP;
-		WEHoldState = 9;
 		WEcntrlTimesReceived = false;
 		WEcommandReceived = false;
 
@@ -107,14 +103,12 @@ public:
 		WDrunMode = rm;
 		WDswitchBack = sb;
 		WDzone = zn;
-		WDHoldState = 9;
 		WDcntrlTimesReceived = false;
 		WDcommandReceived = false;
 
 		WErunMode = rm;
 		WEswitchBack = sb;
 		WEzone = zn;
-		WEHoldState = 9;
 		WEcntrlTimesReceived = false;
 		WEcommandReceived = false;
 
@@ -126,14 +120,12 @@ public:
 		WDrunMode = rm;
 		WDswitchBack = sb;
 		WDzone = zn;
-		WDHoldState = 9;
 		WDcntrlTimesReceived = false;
 		WDcommandReceived = false;
 
 		WErunMode = rm;
 		WEswitchBack = sb;
 		WEzone = zn;
-		WEHoldState = 9;
 		WEcntrlTimesReceived = false;
 		WEcommandReceived = false;
 
@@ -163,14 +155,6 @@ public:
 	void setWDSwitchBack(int sb)
 	{
 		WDswitchBack = sb;
-	}
-	void setWDHoldState(int hs)
-	{
-		WDHoldState = hs;
-	}
-	void setWEHoldState(int hs)
-	{
-		WEHoldState = hs;
 	}
 	void setWDZone(int zn)
 	{
@@ -298,14 +282,6 @@ public:
 	bool getWECommandReceived()
 	{
 		return WEcommandReceived;
-	}
-	int getWDHoldState()
-	{
-		return WDHoldState;
-	}
-	int getWEHoldState()
-	{
-		return WEHoldState;
 	}
 	//****************************************************************
 	// Process any application specific inbound MQTT messages
@@ -455,7 +431,7 @@ public:
 				sprintf(timeString, "%s", output);
 				//sprintf(timeString, "%s", &ptr[i][0]);
 
-				//mqttLog(timeString, true, true);
+				mqttLog(timeString, true, true);
 
 				lptr[i] = atoi(timeString); // Store integer value of time
 											// comment out
@@ -523,15 +499,9 @@ public:
 				setWDSwitchBack(SBOFF);													   		// Switch back to AUTOMODE when Time of Day is next OFF (don't switch back when this zone ends)
 				//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "ON"); 	// FIXTHIS WD or WE
 				if (onORoff() == false)
-				{
-					setWDHoldState(1);									// the state to hold while in NEXTMDDE
-					app_WD_on(cntrlObjRef);
-				}													  	// Set on because we want ON until the end of the next OFF
+					app_WD_on(cntrlObjRef);													  	// Set on because we want ON until the end of the next OFF
 				else
-				{
-					setWDHoldState(0);									// the state to hold while in NEXTMDDE
-					app_WD_off(cntrlObjRef);							// Set off because we want ON until the end of the next OFF
-				}
+					app_WD_off(cntrlObjRef);													// Set off because we want ON until the end of the next OFF
 			}
 			else
 			{
@@ -539,15 +509,9 @@ public:
 				setWESwitchBack(SBOFF);													   		// Switch back to AUTOMODE when Time of Day is next ON (don't switch back when this zone ends)
 				//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "ON"); // FIXTHIS WD or WE
 				if (onORoff() == false)
-				{ 
-					setWEHoldState(1);	
 					app_WE_on(cntrlObjRef);													  	// Set off because we want OFF until the end of the next OFF
-				}
 				else
-				{
-					setWEHoldState(0);	
 					app_WE_off(cntrlObjRef);
-				}
 			}
 		}
 		else if (strcmp(mqttMessage, "SET") == 0)
@@ -559,7 +523,6 @@ public:
 			if (coreServices.getWeekDayState() == true)
 			{
 				setWDRunMode(AUTOMODE);
-				setWDHoldState(9);
 				if (onORoff() == true)
 				{
 					//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "ON"); // FIXTHIS WD or WE
@@ -574,7 +537,6 @@ public:
 			else
 			{
 				setWERunMode(AUTOMODE);
-				setWEHoldState(9);
 				if (onORoff() == true)
 				{
 					//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "ON"); // FIXTHIS WD or WE
@@ -696,31 +658,54 @@ public:
 				onORoffstate = onORoff();
 				wdzone = getWDZone();
 
-				String logRecord = "SwitchBack: " + (String) getWDSwitchBack() + " Zone: " + (String) wdzone + " onOroff: " + (String)onORoffstate   + " Hold: " + getWDHoldState();
+				String logRecord = "SwitchBack: " + (String) getWDSwitchBack() + " Zone: " + (String) wdzone + " onOroff: " + (String)onORoffstate;
 				mqttLog(logRecord.c_str(), true, true);
 
-
-				if (getWDHoldState() == onORoffstate)
+				if (  onORoffstate == false) // true)  // Heating ON based on schedule - not actual
 				{
-					setWDSwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
-					setWDRunMode(AUTOMODE);
-					app_WD_auto(cntrlObjRef);
+					if (getWDSwitchBack() == SBOFF && wdzone != ZONEGAP) // == ZONEGAP) // Heating was off and next switches on
+					{
+						setWDSwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
+						setWDRunMode(AUTOMODE);
+						app_WD_auto(cntrlObjRef);
+				    }
 				}
+				//else 						// Heating OFF based on schedule - not actual
+				//{
+				//	if (getWDSwitchBack() == SBOFF && getWDZone() != ZONEGAP) // Heating was off and next switches on
+			//		{
+			//			setWDSwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
+			//			setWDRunMode(AUTOMODE);
+			//			app_WD_auto(cntrlObjRef);
+			//		}
+			//	}
 			}
 			else if (getWERunMode() == NEXTMODE && coreServices.getWeekDayState() == false)
 			{
 				onORoffstate = onORoff();
 				wezone = getWEZone();			
 
-				String logRecord = "SwitchBack: " + (String) getWESwitchBack() + " Zone: " + (String) wezone + " onOroff: " + (String)onORoffstate + " Hold: " + getWEHoldState();
+				String logRecord = "SwitchBack: " + (String) getWESwitchBack() + " Zone: " + (String) wezone + " onOroff: " + (String)onORoffstate;
 				mqttLog(logRecord.c_str(), true, true);
 
-				if (getWEHoldState() == onORoffstate)
+				if ( onORoffstate == false)  // Heating OFF based on schedule - not actual
 				{
-					setWESwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
-					setWERunMode(AUTOMODE);
-					app_WE_auto(cntrlObjRef);
+					if (getWESwitchBack() == SBOFF && wezone != ZONEGAP) // Heating was off and next switches on
+					{
+						setWESwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
+						setWERunMode(AUTOMODE);
+						app_WE_auto(cntrlObjRef);
+				    }
 				}
+				//else 						// Heating OFF based on schedule - not actual
+				//{
+				//	if (getWESwitchBack() == SBOFF && getWEZone() != ZONEGAP) // Heating was off and next switches on
+			//		{
+			//			setWESwitchBack(SBON); // SBON means switch back to normal operation at the end of a gap period
+			//			setWERunMode(AUTOMODE);
+			//			app_WE_auto(cntrlObjRef);
+			//		}
+			//	}
 			}
 			else if (getWDRunMode() == AUTOMODE && coreServices.getWeekDayState() == true)
 			{
