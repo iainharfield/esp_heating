@@ -520,43 +520,25 @@ void setHeating(void *cid, int state, String stateMsg, int usDemand, int dsDeman
 	{
 		digitalWrite(usDemand, state); 					// Open valve
 		if (state == ON)
-		{
 			upHeatDemand = 1;							// Record value as digitalRead of OUT pin is not working (FIXTHIS)
-			USCntrlState.setOutputState(1);				// Feedback the Controller tho output of the requested action
-		}
 		else
-		{
-			upHeatDemand = 0;
-			USCntrlState.setOutputState(0);				// Feedback the Controller tho output of the requested action
-		}										
+			upHeatDemand = 0;									
 	}
 	if (obj->getCntrlName() == "HTGDS")
 	{
 		digitalWrite(dsDemand, state);					// open valve
 		if (state == ON)
-		{
 			downHeatDemand = 1;							// Record value as digitalRead of OUT pin is not working (FIXTHIS)
-			DSCntrlState.setOutputState(1);				// Feedback the Controller tho output of the requested action
-		}
 		else
-		{
 			downHeatDemand = 0;	
-			DSCntrlState.setOutputState(0);				// Feedback the Controller tho output of the requested action
-		}
 	}
 	if (obj->getCntrlName() == "HTGHW")
 	{
 		digitalWrite(hwDemand, state); 					// open valve
 		if (state == ON)
-		{
 			waterHeatDemand = 1;						// Record value as digitalRead of OUT pin is not working (FIXTHIS)
-			HWCntrlState.setOutputState(1);				// Feedback the Controller tho output of the requested action
-		}
 		else
-		{
-			waterHeatDemand = 0;
-			HWCntrlState.setOutputState(0);				// Feedback the Controller tho output of the requested action
-		}	
+			waterHeatDemand = 0;	
 	}
 }
 
