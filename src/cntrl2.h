@@ -773,14 +773,33 @@ public:
 				}
 			}
 			// FIXTHIS  logic not sound - I think do each individually
-			else if (getWDRunMode() == ONMODE || getWDRunMode() == ONMODE)
+			else if (getWDRunMode() == ONMODE) // || getWDRunMode() == ONMODE)
 			{
+
+				app_WD_on(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
 				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently ON");
 				mqttLog(logString, true, true);
 			}
-			else if (getWERunMode() == OFFMODE || getWERunMode() == OFFMODE)
+			else if (getWDRunMode() == OFFMODE) // || getWDRunMode() == ONMODE)
 			{
+
+				app_WD_off(cntrlObjRef);
+				memset(logString, 0, sizeof logString);
+				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently OFF");
+				mqttLog(logString, true, true);
+			}
+			else if (getWERunMode() == ONMODE) // || getWDRunMode() == ONMODE)
+			{
+
+				app_WD_on(cntrlObjRef);
+				memset(logString, 0, sizeof logString);
+				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently ON");
+				mqttLog(logString, true, true);
+			}			
+			else if (getWERunMode() == OFFMODE) // || getWERunMode() == OFFMODE)
+			{
+				app_WE_off(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
 				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently OFF");
 				mqttLog(logString, true, true);
