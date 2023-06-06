@@ -374,16 +374,19 @@ public:
 		 ************************************************************************/
 		else if (strcmp(topic, getWDUIcommandStateTopic().c_str()) == 0)
 		{
-			WDcommandReceived = true;
-			if (coreServices.getWeekDayState() == true)
+			if (reporting == REPORT_DEBUG)
 			{
-				if (processCntrlMessage(mqtt_payload, "ON", "OFF", getWDUIcommandStateTopic().c_str()) == true)
-				{
+				String msg = "getWDUIcommandStateTopic : " + getWDUIcommandStateTopic();
+				mqttLog(msg.c_str(), true, true);
+			}
+			WDcommandReceived = true;
+
+			if (processCntrlMessage(mqtt_payload, "ON", "OFF", getWDUIcommandStateTopic().c_str()) == true)
+			{
 					Serial.print("ERROR: Unknown message - ");
 					Serial.print(mqtt_payload);
 					Serial.print(" - received for topic ");
 					Serial.println(getWDUIcommandStateTopic().c_str());
-				}
 			}
 			return true;
 		}
@@ -397,16 +400,18 @@ public:
 		 ************************************************************************/
 		else if (strcmp(topic, getWEUIcommandStateTopic().c_str()) == 0)
 		{
-			WEcommandReceived = true;
-			if (coreServices.getWeekDayState() == false) // false == weekend
+			if (reporting == REPORT_DEBUG)
 			{
-				if (processCntrlMessage(mqtt_payload, "ON", "OFF", getWEUIcommandStateTopic().c_str()) == true)
-				{
+				String msg = "getWEUIcommandStateTopic : " + getWEUIcommandStateTopic();
+				mqttLog(msg.c_str(), true, true);
+			}	
+			WEcommandReceived = true;
+			if (processCntrlMessage(mqtt_payload, "ON", "OFF", getWEUIcommandStateTopic().c_str()) == true)
+			{
 					Serial.print("ERROR: Unknown message - ");
 					Serial.print(mqtt_payload);
 					Serial.print(" - received for topic ");
 					Serial.println(getWEUIcommandStateTopic().c_str());
-				}
 			}
 			return true;
 		}
@@ -445,7 +450,7 @@ public:
 		char inStrLocal[255]; // local copy}
 		memset(inStrLocal, '\0', sizeof(inStrLocal));
 		strcpy(inStrLocal, inStr);
-		mqttLog(inStrLocal, true, true);
+		//mqttLog(inStrLocal, true, true);
 
 		pch = strtok(inStrLocal, ",");
 		while (pch != NULL)
@@ -484,56 +489,57 @@ public:
 	 ************************************************************/
 	bool processCntrlMessage(char *mqttMessage, const char *onMessage, const char *offMessage, const char *commandTopic)
 	{
+		if (reporting == REPORT_DEBUG)
+		{		
+			String msg = "processCntrlMessage : " + (String)commandTopic + " " + (String) mqttMessage;
+			mqttLog(msg.c_str(), true, true);
+		}
 		if (strcmp(mqttMessage, "ON") == 0)
 		{
-
-			if (coreServices.getWeekDayState() == true)
+			if (strcmp(commandTopic, getWDUIcommandStateTopic().c_str()) == 0)
 			{
 				setWDRunMode(ONMODE);
-				// mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, false, "ON");
 				app_WD_on(cntrlObjRef);
 			}
-			else
+			else if (strcmp(commandTopic, getWEUIcommandStateTopic().c_str()) == 0)
 			{
 				setWERunMode(ONMODE);
-				// mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, false, "ON");
 				app_WE_on(cntrlObjRef);
 			}
 		}
 		else if (strcmp(mqttMessage, "OFF") == 0)
 		{
-			//*rm = OFFMODE;
-			if (coreServices.getWeekDayState() == true)
+			if (strcmp(commandTopic, getWDUIcommandStateTopic().c_str()) == 0)
 			{
+				//String msg = "processCntrlMessage-1 : " + (String)commandTopic;
+		        //mqttLog(msg.c_str(), true, true);
 				setWDRunMode(OFFMODE);
-				// mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "OFF"); // FIXTHIS WD or WE
 				app_WD_off(cntrlObjRef);
 			}
-			else
+			else if (strcmp(commandTopic, getWEUIcommandStateTopic().c_str()) == 0)
 			{
+				//String msg = "processCntrlMessage-2 : " + (String)commandTopic;
+				//mqttLog(msg.c_str(), true, true);
 				setWERunMode(OFFMODE);
-				// mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "OFF"); // FIXTHIS WD or WE
 				app_WE_off(cntrlObjRef);
 			}
 		}
 		else if (strcmp(mqttMessage, "ONOFF") == 0)
 		{
-			// mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "ON");	// FIXTHIS WD or WE
 			app_WD_on(cntrlObjRef); // FIXTHIS WD or WE
 			delay(5000);			// FIX this
-			// mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "OFF"); // FIXTHIS WD or WE
 			app_WD_off(cntrlObjRef); // FIXTHIS WD or WE
 
 			// setWDRunMode(AUTOMODE); // FIX THIS : why am I doing this? leave as is
 		}
 		else if (strcmp(mqttMessage, "NEXT") == 0)
 		{
-			if (coreServices.getWeekDayState() == true)
+			if (strcmp(commandTopic, getWDUIcommandStateTopic().c_str()) == 0)
 			{
+
 				setWDRunMode(NEXTMODE);
 				setWDSwitchBack(SBOFF); // Switch back to AUTOMODE when Time of Day is next OFF (don't switch back when this zone ends)
-				// mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "ON"); 	// FIXTHIS WD or WE
-				//if (onORoff() == true)
+
 				if (getOutputState() == 0)
 				{
 					String logRecord = "NEXT receive onORoff returned true. Zone = " + (String)getWDZone() + " RunMode: " + (String)getWDRunMode() + " Output State: " + (String)getOutputState()  ;
@@ -551,7 +557,7 @@ public:
 					app_WD_off(cntrlObjRef); // Set off because we want OFF until the end of the next ON
 				}
 			}
-			else
+			else if (strcmp(commandTopic, getWEUIcommandStateTopic().c_str()) == 0)
 			{
 				setWERunMode(NEXTMODE);
 				setWESwitchBack(SBOFF); // Switch back to AUTOMODE when Time of Day is next ON (don't switch back when this zone ends)
@@ -574,33 +580,30 @@ public:
 			mqttLog("processCntrlMessage: SET received.", true, true);
 
 			// IF pressed SET then check the ON Close time and sent the appropriate message
-			if (coreServices.getWeekDayState() == true)
+			if (strcmp(commandTopic, getWDUIcommandStateTopic().c_str()) == 0)
 			{
+
 				setWDRunMode(AUTOMODE);
 				setWDHoldState(9);
 				if (onORoff() == true)
 				{
-					// mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "ON"); // FIXTHIS WD or WE
 					app_WD_on(cntrlObjRef);
 				}
 				else
 				{
-					// mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "OFF"); // FIXTHIS WD or WE
 					app_WD_off(cntrlObjRef);
 				}
 			}
-			else
+			else if (strcmp(commandTopic, getWEUIcommandStateTopic().c_str()) == 0)
 			{
 				setWERunMode(AUTOMODE);
 				setWEHoldState(9);
 				if (onORoff() == true)
 				{
-					// mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "ON"); // FIXTHIS WD or WE
 					app_WE_on(cntrlObjRef);
 				}
 				else
 				{
-					// mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "OFF"); // FIXTHIS WD or WE
 					app_WE_off(cntrlObjRef);
 				}
 			}
@@ -639,8 +642,6 @@ public:
 			setWEZone(ZONEGAP);
 
 		bool state = false;
-		//if (getOutputState() == 0) 
-		//	state = true;
 
 
 		if (readyCheck() == true) // All conditions to start are met
@@ -773,41 +774,41 @@ public:
 				}
 			}
 			// FIXTHIS  logic not sound - I think do each individually
-			else if (getWDRunMode() == ONMODE) // || getWDRunMode() == ONMODE)
+			else if (getWDRunMode() == ONMODE) 
 			{
 
 				app_WD_on(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
-				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently ON");
+				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Permanently ON");
 				mqttLog(logString, true, true);
 			}
-			else if (getWDRunMode() == OFFMODE) // || getWDRunMode() == ONMODE)
+			else if (getWDRunMode() == OFFMODE) 
 			{
 
 				app_WD_off(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
-				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently OFF");
+				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Permanently OFF");
 				mqttLog(logString, true, true);
 			}
-			else if (getWERunMode() == ONMODE) // || getWDRunMode() == ONMODE)
+			else if (getWERunMode() == ONMODE) 
 			{
 
 				app_WD_on(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
-				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently ON");
+				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Permanently ON");
 				mqttLog(logString, true, true);
 			}			
-			else if (getWERunMode() == OFFMODE) // || getWERunMode() == OFFMODE)
+			else if (getWERunMode() == OFFMODE) 
 			{
 				app_WE_off(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
-				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Permanently OFF");
+				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Permanently OFF");
 				mqttLog(logString, true, true);
 			}
 			else
 			{
 				memset(logString, 0, sizeof logString);
-				sprintf(logString, "%s,%s,%s,%s", ntptod, espDevice.getType().c_str(), espDevice.getName().c_str(), "Unknown running mode ");
+				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Unknown running mode ");
 				mqttLog(logString, true, true);
 			}
 		}

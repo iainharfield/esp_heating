@@ -354,7 +354,10 @@ void checkValveStatus()
 	if (digitalRead(HTG_UPSTAIRS_STATUS) == 0 && upHeatDemand == 0)
 	{
 		usValveRetry = 0;
-		mqttLog("Uptairs: Status : OFF , DEMAND : OFF",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Upstairs: Status : OFF , DEMAND : OFF",true,true);
+		}
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "OFF");
 		mqttClient.publish(StateUpstairsValveState,  1, true, "OK");				// Updates UI
 	}
@@ -362,7 +365,10 @@ void checkValveStatus()
 	{
 		usValveRetry = 0;
 		usDemand = 1;
-		mqttLog("Upstairs: Status : ON , DEMAND : ON",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Upstairs: Status : ON , DEMAND : ON",true,true);
+		}
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "ON");
 		mqttClient.publish(StateUpstairsValveState,  0, true, "OK");
 	}
@@ -378,7 +384,10 @@ void checkValveStatus()
 	if (digitalRead(HTG_DOWNSTAIRS_STATUS) == 0 && downHeatDemand == 0)
 	{
 		dsValveRetry = 0;
-		mqttLog("Downstairs: Status : OFF , DEMAND : OFF",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Downstairs: Status : OFF , DEMAND : OFF",true,true);
+		}
 		mqttClient.publish(StateDownstairsRuntime, 1, true, "OFF");					// Updates UI
 		mqttClient.publish(StateDownstairsValveState,  1, true, "OK");				// Updates UI
 	}
@@ -386,7 +395,10 @@ void checkValveStatus()
 	{
 		dsValveRetry = 0;
 		dsDemand = 1;
-		mqttLog("Downstairs: Status : ON , DEMAND : ON",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Downstairs: Status : ON , DEMAND : ON",true,true);
+		}
 		mqttClient.publish(StateDownstairsRuntime, 1, true, "ON");
 		mqttClient.publish(StateDownstairsValveState,  0, true, "OK");
 	}
@@ -403,7 +415,10 @@ void checkValveStatus()
 	if (digitalRead(HW_STATUS) == 0 && waterHeatDemand == 0)
 	{
 		hwValveRetry = 0;
-		mqttLog("Hotwater: Status : OFF , DEMAND : OFF",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Hotwater: Status : OFF , DEMAND : OFF",true,true);
+		}
 		mqttClient.publish(StateHotwaterRuntime, 1, true, "OFF");					// Updates UI
 		mqttClient.publish(StateHotwaterValveState,  1, true, "OK");				// Updates UI		
 	}
@@ -411,7 +426,10 @@ void checkValveStatus()
 	{
 		hwValveRetry = 0;
 		hwDemand = 1;
-		mqttLog("Hotwater: Status : ON , DEMAND : ON",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Hotwater: Status : ON , DEMAND : ON",true,true);
+		}
 		mqttClient.publish(StateHotwaterRuntime, 1, true, "ON");					// Updates UI
 		mqttClient.publish(StateHotwaterValveState,  0, true, "OK");				// Updates UI
 	}
@@ -439,7 +457,10 @@ void setBoilerDemand()
 {
 	if ( waterHeatDemand == 0 && downHeatDemand == 0 && upHeatDemand == 0)
 	{
-		mqttLog("Switch boiler OFF",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Switch boiler OFF" ,true,true);
+		}
 		usDemand = 0;
 		dsDemand = 0;
 		hwDemand = 0;
@@ -447,7 +468,10 @@ void setBoilerDemand()
 	}
 	if (usDemand == 1 || dsDemand == 1 || hwDemand == 1)
 	{
-		mqttLog("Switch boiler ON",true,true);
+		if (reporting == REPORT_DEBUG)
+		{
+			mqttLog("Switch boiler ON",true,true);
+		}
 		digitalWrite(MAX_TEMP, ON);						// Swich boiler ON
 	}
 }
