@@ -85,14 +85,14 @@ class cntrlState
 public:
 	cntrlState()
 	{
-		WDrunMode = AUTOMODE;
+		WDrunMode = UNKNOWNMODE; //AUTOMODE;
 		WDswitchBack = SBUNKOWN;
 		WDzone = ZONEGAP;
 		WDHoldState = 9;
 		WDcntrlTimesReceived = false;
 		WDcommandReceived = false;
 
-		WErunMode = AUTOMODE;
+		WErunMode = UNKNOWNMODE;
 		WEswitchBack = SBUNKOWN;
 		WEzone = ZONEGAP;
 		WEHoldState = 9;
@@ -491,7 +491,7 @@ public:
 	{
 		if (reporting == REPORT_DEBUG)
 		{
-			String msg = "processCntrlMessage : " + (String)commandTopic + " " + (String)mqttMessage;
+			String msg = cntrlName + ",processCntrlMessage : " + (String)commandTopic + " " + (String)mqttMessage;
 			mqttLog(msg.c_str(), true, true);
 		}
 		if (strcmp(mqttMessage, "ON") == 0)
@@ -576,8 +576,8 @@ public:
 		}
 		else if (strcmp(mqttMessage, "SET") == 0)
 		{
-
-			mqttLog("processCntrlMessage: SET received.", true, true);
+			String msg = cntrlName + ",processCntrlMessage: SET received.";
+			mqttLog(msg.c_str(), true, true);
 
 			// IF pressed SET then check the ON Close time and sent the appropriate message
 			if (strcmp(commandTopic, getWDUIcommandStateTopic().c_str()) == 0)
