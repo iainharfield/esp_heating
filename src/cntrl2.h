@@ -46,7 +46,7 @@ void processCrtlTimes(char *, char (&ptr)[6][10], int lptr[6]);
 
 class cntrlState
 {
-	int outputState = 0; //Off
+	int outputState = 0; // Off
 	int WDrunMode;
 	int WDswitchBack;
 	int WDzone;
@@ -102,7 +102,7 @@ public:
 		refreshID = "UNDEF";
 		cntrlName = "UNDEF";
 
-		outputState = 0; //Off
+		outputState = 0; // Off
 	}
 	cntrlState(int rm, int sb, int zn)
 	{
@@ -383,10 +383,10 @@ public:
 
 			if (processCntrlMessage(mqtt_payload, "ON", "OFF", getWDUIcommandStateTopic().c_str()) == true)
 			{
-					Serial.print("ERROR: Unknown message - ");
-					Serial.print(mqtt_payload);
-					Serial.print(" - received for topic ");
-					Serial.println(getWDUIcommandStateTopic().c_str());
+				Serial.print("ERROR: Unknown message - ");
+				Serial.print(mqtt_payload);
+				Serial.print(" - received for topic ");
+				Serial.println(getWDUIcommandStateTopic().c_str());
 			}
 			return true;
 		}
@@ -404,14 +404,14 @@ public:
 			{
 				String msg = "getWEUIcommandStateTopic : " + getWEUIcommandStateTopic();
 				mqttLog(msg.c_str(), true, true);
-			}	
+			}
 			WEcommandReceived = true;
 			if (processCntrlMessage(mqtt_payload, "ON", "OFF", getWEUIcommandStateTopic().c_str()) == true)
 			{
-					Serial.print("ERROR: Unknown message - ");
-					Serial.print(mqtt_payload);
-					Serial.print(" - received for topic ");
-					Serial.println(getWEUIcommandStateTopic().c_str());
+				Serial.print("ERROR: Unknown message - ");
+				Serial.print(mqtt_payload);
+				Serial.print(" - received for topic ");
+				Serial.println(getWEUIcommandStateTopic().c_str());
 			}
 			return true;
 		}
@@ -450,7 +450,7 @@ public:
 		char inStrLocal[255]; // local copy}
 		memset(inStrLocal, '\0', sizeof(inStrLocal));
 		strcpy(inStrLocal, inStr);
-		//mqttLog(inStrLocal, true, true);
+		// mqttLog(inStrLocal, true, true);
 
 		pch = strtok(inStrLocal, ",");
 		while (pch != NULL)
@@ -490,8 +490,8 @@ public:
 	bool processCntrlMessage(char *mqttMessage, const char *onMessage, const char *offMessage, const char *commandTopic)
 	{
 		if (reporting == REPORT_DEBUG)
-		{		
-			String msg = "processCntrlMessage : " + (String)commandTopic + " " + (String) mqttMessage;
+		{
+			String msg = "processCntrlMessage : " + (String)commandTopic + " " + (String)mqttMessage;
 			mqttLog(msg.c_str(), true, true);
 		}
 		if (strcmp(mqttMessage, "ON") == 0)
@@ -511,23 +511,23 @@ public:
 		{
 			if (strcmp(commandTopic, getWDUIcommandStateTopic().c_str()) == 0)
 			{
-				//String msg = "processCntrlMessage-1 : " + (String)commandTopic;
-		        //mqttLog(msg.c_str(), true, true);
+				// String msg = "processCntrlMessage-1 : " + (String)commandTopic;
+				// mqttLog(msg.c_str(), true, true);
 				setWDRunMode(OFFMODE);
 				app_WD_off(cntrlObjRef);
 			}
 			else if (strcmp(commandTopic, getWEUIcommandStateTopic().c_str()) == 0)
 			{
-				//String msg = "processCntrlMessage-2 : " + (String)commandTopic;
-				//mqttLog(msg.c_str(), true, true);
+				// String msg = "processCntrlMessage-2 : " + (String)commandTopic;
+				// mqttLog(msg.c_str(), true, true);
 				setWERunMode(OFFMODE);
 				app_WE_off(cntrlObjRef);
 			}
 		}
 		else if (strcmp(mqttMessage, "ONOFF") == 0)
 		{
-			app_WD_on(cntrlObjRef); // FIXTHIS WD or WE
-			delay(5000);			// FIX this
+			app_WD_on(cntrlObjRef);	 // FIXTHIS WD or WE
+			delay(5000);			 // FIX this
 			app_WD_off(cntrlObjRef); // FIXTHIS WD or WE
 
 			// setWDRunMode(AUTOMODE); // FIX THIS : why am I doing this? leave as is
@@ -542,17 +542,17 @@ public:
 
 				if (getOutputState() == 0)
 				{
-					String logRecord = "NEXT receive onORoff returned true. Zone = " + (String)getWDZone() + " RunMode: " + (String)getWDRunMode() + " Output State: " + (String)getOutputState()  ;
-					mqttLog(logRecord.c_str() , true, true);
-					
+					String logRecord = "NEXT receive onORoff returned true. Zone = " + (String)getWDZone() + " RunMode: " + (String)getWDRunMode() + " Output State: " + (String)getOutputState();
+					mqttLog(logRecord.c_str(), true, true);
+
 					setWDHoldState(1); // the state to hold while in NEXTMDDE
 
 					app_WD_on(cntrlObjRef);
 				} // Set on because we want ON until the end of the next OFF
 				else
 				{
-					String logRecord = "NEXT receive onORoff returned false. Zone = " + (String)getWDZone() + " RunMode: " + (String)getWDRunMode() + " Output State: " + (String)getOutputState() ;
-					mqttLog(logRecord.c_str() , true, true);
+					String logRecord = "NEXT receive onORoff returned false. Zone = " + (String)getWDZone() + " RunMode: " + (String)getWDRunMode() + " Output State: " + (String)getOutputState();
+					mqttLog(logRecord.c_str(), true, true);
 					setWDHoldState(0);		 // the state to hold while in NEXTMDDE
 					app_WD_off(cntrlObjRef); // Set off because we want OFF until the end of the next ON
 				}
@@ -643,7 +643,6 @@ public:
 
 		bool state = false;
 
-
 		if (readyCheck() == true) // All conditions to start are met
 		{
 			/****************************************************************
@@ -671,10 +670,10 @@ public:
 				{
 					if (ohTimenow >= WDlcntrlTimes[i] && ohTimenow < WDlcntrlTimes[i + 1])
 					{
-						//if (getOutputState() == 0) 
-							state = true; // Switch on
-						//else
-						//	state = false; // Switch off	
+						// if (getOutputState() == 0)
+						state = true; // Switch on
+						// else
+						//	state = false; // Switch off
 						setWDZone(j); // Update which zone we are in (there maybe overlapping time zones)
 						break;
 					}
@@ -682,10 +681,10 @@ public:
 				else
 				{
 					if (ohTimenow >= WElcntrlTimes[i] && ohTimenow < WElcntrlTimes[i + 1])
-					{	
-						//if (getOutputState() == 0)
-							state = true; // Switch on
-						//else 
+					{
+						// if (getOutputState() == 0)
+						state = true; // Switch on
+						// else
 						//	state = false; // Switch off
 						setWEZone(j); // Update which zone we are in (there maybe overlapping time zones)
 						break;
@@ -719,7 +718,8 @@ public:
 		// Check all WD and WE times have been received before doing anything
 		if (runTimeReceivedCheck() == true)
 		{
-			if (getWDRunMode() == NEXTMODE && coreServices.getWeekDayState() == true)
+			// if (getWDRunMode() == NEXTMODE && coreServices.getWeekDayState() == true)
+			if (getWDRunMode() == NEXTMODE)
 			{
 				onORoffstate = onORoff();
 				wdzone = getWDZone();
@@ -734,7 +734,8 @@ public:
 					app_WD_auto(cntrlObjRef);
 				}
 			}
-			else if (getWERunMode() == NEXTMODE && coreServices.getWeekDayState() == false)
+			// else if (getWERunMode() == NEXTMODE && coreServices.getWeekDayState() == false) //false == weekend
+			if (getWERunMode() == NEXTMODE)
 			{
 				onORoffstate = onORoff();
 				wezone = getWEZone();
@@ -749,7 +750,8 @@ public:
 					app_WE_auto(cntrlObjRef);
 				}
 			}
-			else if (getWDRunMode() == AUTOMODE && coreServices.getWeekDayState() == true)
+			//else if (getWDRunMode() == AUTOMODE && coreServices.getWeekDayState() == true)
+			if (getWDRunMode() == AUTOMODE)
 			{
 				if (onORoff() == true)
 				{
@@ -762,7 +764,8 @@ public:
 					app_WD_off(cntrlObjRef);
 				}
 			}
-			else if (getWERunMode() == AUTOMODE && coreServices.getWeekDayState() == false)
+			//else if (getWERunMode() == AUTOMODE && coreServices.getWeekDayState() == false)
+			if (getWERunMode() == AUTOMODE)
 			{
 				if (onORoff() == true)
 				{
@@ -774,7 +777,8 @@ public:
 				}
 			}
 			// FIXTHIS  logic not sound - I think do each individually
-			else if (getWDRunMode() == ONMODE) 
+			//else if (getWDRunMode() == ONMODE)
+			if (getWDRunMode() == ONMODE)
 			{
 
 				app_WD_on(cntrlObjRef);
@@ -782,7 +786,8 @@ public:
 				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Permanently ON");
 				mqttLog(logString, true, true);
 			}
-			else if (getWDRunMode() == OFFMODE) 
+			//else if (getWDRunMode() == OFFMODE)
+			if (getWDRunMode() == OFFMODE)
 			{
 
 				app_WD_off(cntrlObjRef);
@@ -790,15 +795,17 @@ public:
 				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Permanently OFF");
 				mqttLog(logString, true, true);
 			}
-			else if (getWERunMode() == ONMODE) 
+			//else if (getWERunMode() == ONMODE)
+			if (getWERunMode() == ONMODE)
 			{
 
-				app_WD_on(cntrlObjRef);
+				app_WE_on(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
 				sprintf(logString, "%s,%s,%s", getCntrlName().c_str(), espDevice.getName().c_str(), "Permanently ON");
 				mqttLog(logString, true, true);
-			}			
-			else if (getWERunMode() == OFFMODE) 
+			}
+			//else if (getWERunMode() == OFFMODE)
+			if (getWERunMode() == OFFMODE)
 			{
 				app_WE_off(cntrlObjRef);
 				memset(logString, 0, sizeof logString);
