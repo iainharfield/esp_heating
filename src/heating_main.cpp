@@ -275,6 +275,8 @@ void processAppTOD_Ext()
 
 bool processCntrlMessageApp_Ext(char *mqttMessage, const char *onMessage, const char *offMessage, const char *commandTopic)
 {
+	//String msg = "Application Specific message  handling: " + (String)mqttMessage ;
+	//mqttLog(msg.c_str(), true, true);
 	if (strcmp(mqttMessage, "SET") == 0)
 	{
 		// mqttClient.publish(StateUpstairsRuntime,1, true, "AUTO");			// This just sets the UI to show that MAN start is OFF

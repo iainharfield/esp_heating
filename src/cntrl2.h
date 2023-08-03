@@ -104,6 +104,7 @@ public:
 
 		outputState = 0; // Off
 	}
+	/*
 	cntrlState(int rm, int sb, int zn)
 	{
 		WDrunMode = rm;
@@ -124,6 +125,8 @@ public:
 		cntrlName = "UNDEF";
 		outputState = 0;
 	}
+	*/
+	/*
 	void setup(int rm, int sb, int zn)
 	{
 		WDrunMode = rm;
@@ -144,6 +147,7 @@ public:
 		cntrlName = "UNDEF";
 		outputState = 0;
 	}
+	*/
 	String getCntrlName()
 	{
 		return cntrlName;
@@ -576,12 +580,11 @@ public:
 		}
 		else if (strcmp(mqttMessage, "SET") == 0)
 		{
-			String msg = cntrlName + ",processCntrlMessage: SET received.";
-			mqttLog(msg.c_str(), true, true);
-
 			// IF pressed SET then check the ON Close time and sent the appropriate message
 			if (strcmp(commandTopic, getWDUIcommandStateTopic().c_str()) == 0)
 			{
+				String msg = cntrlName + ",processCntrlMessage: SET received from: " + getWDUIcommandStateTopic() ;
+				mqttLog(msg.c_str(), true, true);
 
 				setWDRunMode(AUTOMODE);
 				setWDHoldState(9);
@@ -596,6 +599,9 @@ public:
 			}
 			else if (strcmp(commandTopic, getWEUIcommandStateTopic().c_str()) == 0)
 			{
+				String msg = cntrlName + ",processCntrlMessage: SET received from: " + getWEUIcommandStateTopic() ;
+				mqttLog(msg.c_str(), true, true);
+
 				setWERunMode(AUTOMODE);
 				setWEHoldState(9);
 				if (onORoff() == true)
@@ -610,6 +616,7 @@ public:
 		}
 		else
 		{
+			// Application Specific handling of message as not for Contolller
 			processCntrlMessageApp_Ext(mqttMessage, onMessage, offMessage, commandTopic);
 			return true;
 		}
@@ -879,6 +886,8 @@ public:
 				mqttLog(logString, true, true);
 			}
 			// FIXTHIS ... WD and WE python returns both
+			String msg = "Requesting configuration from Database";
+			mqttLog(msg.c_str(), true, true);
 			mqttClient.publish(oh3StateIOTRefresh, 0, true, getRefreshID().c_str());
 			return false;
 		}
