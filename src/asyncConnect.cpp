@@ -2,7 +2,7 @@
 
  *****************************************************************************************************************************/
 
-#include <ESP8266WiFi.h>
+//#include <ESP8266WiFi.h>
 #include <time.h>
 #include <ArduinoOTA.h>
 #include <Ticker.h>
@@ -99,9 +99,9 @@ char configFileName[] = "/platform/config.json";
 char wifiConfigOnboot[10] = "NO";
 char mqttBrokerIPAddr[16] = "192.168.0.1";
 char mqttBrokerPort[5] = "1883";
-char esp_ipAddress[15];
-char esp_GWipAddress[15];
-char esp_netMask[15];
+char esp_ipAddress[16];
+char esp_GWipAddress[16];
+char esp_netMask[16];
 
 // Keep local copy of Wifi credentials
 String Router_SSID;
