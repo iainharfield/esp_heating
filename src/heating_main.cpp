@@ -4,9 +4,9 @@
 #include <Ticker.h>
 #include <time.h>
 
-#include "defines.h"
-#include "utilities.h"
-#include "cntrl2.h"
+#include "hh_defines.h"
+#include "hh_utilities.h"
+#include "hh_cntrl.h"
 
 #include <AsyncMqttClient_Generic.hpp>
 
@@ -21,7 +21,7 @@
 // Template functions
 //***********************
 bool onMqttMessageAppExt(char *, char *, const AsyncMqttClientMessageProperties &, const size_t &, const size_t &, const size_t &);
-// bool onMqttMessageCntrlExt(char *, char *, const AsyncMqttClientMessageProperties &, const size_t &, const size_t &, const size_t &);
+bool onMqttMessageAppCntrlExt(char *, char *, const AsyncMqttClientMessageProperties &, const size_t &, const size_t &, const size_t &);
 void appMQTTTopicSubscribe();
 void telnet_extension_1(char);
 void telnet_extension_2(char);
@@ -255,10 +255,7 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 	mqtt_payload[len] = '\0';
 	strncpy(mqtt_payload, payload, len);
 
-	if (reporting == REPORT_DEBUG)
-	{
-		mqttLog(mqtt_payload, true, true);
-	}
+	mqttLog(mqtt_payload, REPORT_DEBUG, true, true);
 
 	// Prceess the messages for each controller created
 	USCntrlState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
@@ -270,7 +267,7 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 
 void processAppTOD_Ext()
 {
-	mqttLog("HEATING Application Processing TOD", true, true);
+	mqttLog("HEATING Application Processing TOD", REPORT_INFO, true, true);
 }
 
 bool processCntrlMessageApp_Ext(char *mqttMessage, const char *onMessage, const char *offMessage, const char *commandTopic)
@@ -356,10 +353,9 @@ void checkValveStatus()
 	if (digitalRead(HTG_UPSTAIRS_STATUS) == 0 && upHeatDemand == 0)
 	{
 		usValveRetry = 0;
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Upstairs: Status : OFF , DEMAND : OFF",true,true);
-		}
+
+		mqttLog("Upstairs: Status : OFF , DEMAND : OFF", REPORT_DEBUG, true, true);
+		
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "OFF");
 		mqttClient.publish(StateUpstairsValveState,  1, true, "OK");				// Updates UI
 	}
@@ -367,17 +363,16 @@ void checkValveStatus()
 	{
 		usValveRetry = 0;
 		usDemand = 1;
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Upstairs: Status : ON , DEMAND : ON",true,true);
-		}
+
+		mqttLog("Upstairs: Status : ON , DEMAND : ON", REPORT_DEBUG, true, true);
+
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "ON");
 		mqttClient.publish(StateUpstairsValveState,  0, true, "OK");
 	}
 	else
 	{
 		usValveRetry++;
-		mqttLog("Upstairs: Status : Valve opening or closing",true,true);
+		mqttLog("Upstairs: Status : Valve opening or closing", REPORT_INFO, true, true);
 		mqttClient.publish(StateUpstairsRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
 	}
 	//#########################################
@@ -386,10 +381,9 @@ void checkValveStatus()
 	if (digitalRead(HTG_DOWNSTAIRS_STATUS) == 0 && downHeatDemand == 0)
 	{
 		dsValveRetry = 0;
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Downstairs: Status : OFF , DEMAND : OFF",true,true);
-		}
+
+		mqttLog("Downstairs: Status : OFF , DEMAND : OFF", REPORT_DEBUG, true, true);
+
 		mqttClient.publish(StateDownstairsRuntime, 1, true, "OFF");					// Updates UI
 		mqttClient.publish(StateDownstairsValveState,  1, true, "OK");				// Updates UI
 	}
@@ -397,17 +391,16 @@ void checkValveStatus()
 	{
 		dsValveRetry = 0;
 		dsDemand = 1;
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Downstairs: Status : ON , DEMAND : ON",true,true);
-		}
+
+		mqttLog("Downstairs: Status : ON , DEMAND : ON", REPORT_DEBUG, true, true);
+	
 		mqttClient.publish(StateDownstairsRuntime, 1, true, "ON");
 		mqttClient.publish(StateDownstairsValveState,  0, true, "OK");
 	}
 	else
 	{
 		dsValveRetry++;
-		mqttLog("Downstairs: Status : Valve opening or closing",true,true);
+		mqttLog("Downstairs: Status : Valve opening or closing", REPORT_INFO, true, true);
 		mqttClient.publish(StateDownstairsRuntime, 1, true, "WAIT"); // send WAIT if changing valve state. i.e. wait for motorised valve to open or close
 	}
 
@@ -417,10 +410,9 @@ void checkValveStatus()
 	if (digitalRead(HW_STATUS) == 0 && waterHeatDemand == 0)
 	{
 		hwValveRetry = 0;
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Hotwater: Status : OFF , DEMAND : OFF",true,true);
-		}
+
+		mqttLog("Hotwater: Status : OFF , DEMAND : OFF", REPORT_DEBUG, true, true);
+		
 		mqttClient.publish(StateHotwaterRuntime, 1, true, "OFF");					// Updates UI
 		mqttClient.publish(StateHotwaterValveState,  1, true, "OK");				// Updates UI		
 	}
@@ -428,17 +420,16 @@ void checkValveStatus()
 	{
 		hwValveRetry = 0;
 		hwDemand = 1;
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Hotwater: Status : ON , DEMAND : ON",true,true);
-		}
+
+		mqttLog("Hotwater: Status : ON , DEMAND : ON", REPORT_DEBUG, true, true);
+		
 		mqttClient.publish(StateHotwaterRuntime, 1, true, "ON");					// Updates UI
 		mqttClient.publish(StateHotwaterValveState,  0, true, "OK");				// Updates UI
 	}
 	else
 	{
 		hwValveRetry++;
-		mqttLog("Hotwater: Status : Valve opening or closing",true,true);
+		mqttLog("Hotwater: Status : Valve opening or closing",REPORT_INFO, true, true);
 		mqttClient.publish(StateHotwaterRuntime, 1, true, "WAIT"); 					// send WAIT if changing valve state. i.e. wait for motorised valve to open or close	
 	}
 	
@@ -459,10 +450,9 @@ void setBoilerDemand()
 {
 	if ( waterHeatDemand == 0 && downHeatDemand == 0 && upHeatDemand == 0)
 	{
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Switch boiler OFF" ,true,true);
-		}
+
+		mqttLog("Switch boiler OFF" ,REPORT_DEBUG, true, true);
+		
 		usDemand = 0;
 		dsDemand = 0;
 		hwDemand = 0;
@@ -470,10 +460,9 @@ void setBoilerDemand()
 	}
 	if (usDemand == 1 || dsDemand == 1 || hwDemand == 1)
 	{
-		if (reporting == REPORT_DEBUG)
-		{
-			mqttLog("Switch boiler ON",true,true);
-		}
+		
+		mqttLog("Switch boiler ON", REPORT_DEBUG, true, true);
+		
 		digitalWrite(MAX_TEMP, ON);						// Swich boiler ON
 	}
 }
@@ -482,36 +471,54 @@ void setBoilerDemand()
 
 void app_WD_on(void *cid)
 {
-	setHeating(cid, ON, "WD ON", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	if (coreServices.getWeekDayState() == 1)			// 1 means weekday
+	{
+		setHeating(cid, ON, "WD ON", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	}	
 }
 void app_WD_off(void *cid)
 {
-	setHeating(cid, OFF, "WD OFF", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	if (coreServices.getWeekDayState() == 1)			// 1 means weekday
+	{
+		setHeating(cid, OFF, "WD OFF", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	}	
 }
 void app_WE_on(void *cid)
 {
-	setHeating(cid, ON, "WE ON", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	if (coreServices.getWeekDayState() == 0)			// 0 means weekend
+	{
+		setHeating(cid, ON, "WE ON", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	}	
 }
 void app_WE_off(void *cid)
 {
-	setHeating(cid, OFF, "WE OFF", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	if (coreServices.getWeekDayState() == 0)			// 0 means weekend
+	{
+		setHeating(cid, OFF, "WE OFF", HTG_UPSTAIRS_DEMAND, HTG_DOWNSTAIRS_DEMAND, HW_DEMAND);
+	}	
 }
 void app_WD_auto(void *cid)
 {
-	cntrlState *obj = (cntrlState *)cid;
-	String msg = obj->getCntrlName() + " WD AUTO";
-	mqttLog(msg.c_str(), true, true);
+	if (coreServices.getWeekDayState() == 1)			// 1 means weekday
+	{
+		cntrlState *obj = (cntrlState *)cid;
+		String msg = obj->getCntrlName() + " WD AUTO";
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
 							
-	//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-	mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
+		//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+		mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
+	}	
 }
 void app_WE_auto(void *cid)
 {
-	cntrlState *obj = (cntrlState *)cid;
-	String msg = obj->getCntrlName() + " WE AUTO";
-	mqttLog(msg.c_str(), true, true);
-	//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-	mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
+	if (coreServices.getWeekDayState() == 0)			// 0 means weekend
+	{
+		cntrlState *obj = (cntrlState *)cid;
+		String msg = obj->getCntrlName() + " WE AUTO";
+		mqttLog(msg.c_str(), REPORT_INFO, true, true);
+		//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
+		mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
+	}
 }
 void startTimesReceivedChecker()
 {
@@ -538,7 +545,7 @@ void setHeating(void *cid, int state, String stateMsg, int usDemand, int dsDeman
 {
 	cntrlState *obj = (cntrlState *)cid;
 	String msg = obj->getCntrlName() + "," +  stateMsg;
-	mqttLog(msg.c_str(), true, true);
+	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 
 	// FIXTHIS : Remove hard codeing of controller name
 
@@ -614,7 +621,7 @@ void telnet_extensionHelp(char c)
 	printTelnet((String) "x\t\tSome description");
 }
 
-// bool onMqttMessageCntrlExt(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties, const size_t &len, const size_t &index, const size_t &total)
-//{
-//	return USCntrlState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total); //FIXTHIS - totally broken
-// }
+bool onMqttMessageAppCntrlExt(char *topic, char *payload, const AsyncMqttClientMessageProperties &properties, const size_t &len, const size_t &index, const size_t &total)
+{
+	return false;
+}
