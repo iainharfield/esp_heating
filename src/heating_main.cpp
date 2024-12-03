@@ -257,7 +257,8 @@ bool onMqttMessageAppExt(char *topic, char *payload, const AsyncMqttClientMessag
 
 	mqttLog(mqtt_payload, REPORT_DEBUG, true, true);
 
-	// Prceess the messages for each controller created
+	// Prceess the messages for each controller created 
+	// These are called already in the hh_cntrl
 	USCntrlState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
 	DSCntrlState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
 	HWCntrlState.onMqttMessageCntrlExt(topic, payload, properties, len, index, total);
