@@ -127,17 +127,17 @@ bool bCheckUS = true;
 bool bCheckDS = true;
 bool bCheckHW = true;
 
-	int upHeatDemand = 0;
-	int downHeatDemand = 0;
-	int waterHeatDemand = 0;
+int upHeatDemand = 0;
+int downHeatDemand = 0;
+int waterHeatDemand = 0;
 
-	int usDemand = 0;
-	int dsDemand = 0;
-	int hwDemand = 0;
+int usDemand = 0;
+int dsDemand = 0;
+int hwDemand = 0;
 
-    int usValveRetry = 0;
-    int dsValveRetry = 0;
-	int hwValveRetry = 0;
+int usValveRetry = 0;
+int dsValveRetry = 0;
+int hwValveRetry = 0;
 
 /************************************
  * Define relay states to demand heat
@@ -506,8 +506,7 @@ void app_WD_auto(void *cid)
 		String msg = obj->getCntrlName() + " WD AUTO";
 		mqttLog(msg.c_str(), REPORT_INFO, true, true);
 							
-		//mqttClient.publish(getWDCntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-		mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
+		//mqttClient.publish(obj->getWDUIcommandStateTopic().c_str(), 1, true, "SET"); //
 	}	
 }
 void app_WE_auto(void *cid)
@@ -517,8 +516,8 @@ void app_WE_auto(void *cid)
 		cntrlState *obj = (cntrlState *)cid;
 		String msg = obj->getCntrlName() + " WE AUTO";
 		mqttLog(msg.c_str(), REPORT_INFO, true, true);
-		//mqttClient.publish(getWECntrlRunTimesStateTopic().c_str(), 0, true, "AUTO");
-		mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
+		
+		//mqttClient.publish(obj->getWEUIcommandStateTopic().c_str(), 1, true, "SET");
 	}
 }
 void startTimesReceivedChecker()
