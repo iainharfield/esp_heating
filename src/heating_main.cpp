@@ -544,7 +544,7 @@ void telnet_extension_1(char c)
 void setHeating(void *cid, int state, String stateMsg, int usDemand, int dsDemand, int hwDemand )
 {
 	cntrlState *obj = (cntrlState *)cid;
-	String msg = obj->getCntrlName() + "," +  stateMsg;
+	String msg = "setHeating, " + obj->getCntrlName() + "," +  stateMsg;
 	mqttLog(msg.c_str(), REPORT_INFO, true, true);
 
 	// FIXTHIS : Remove hard codeing of controller name
